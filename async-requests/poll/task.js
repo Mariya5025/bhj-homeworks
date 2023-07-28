@@ -1,76 +1,48 @@
-class poll {
-	id = 0;
-	data = {
-		title: "",
-		answers: []
-	};
+const poolAnswers = document.getElementById('poll__answers');
 
-	constructor(pollElement, id = 0) {
-		this.id = id;
-		this.setPollElement(pollElement);
-	}
+// Создаем запрос на получение данных
+const xhr = new XMLHttpRequest();
+xhr.open('GET', 'https://students.netoservices.ru/nestjs-backend/poll');
+xhr.addEventListener('load', function() {
+    if(xhr.readyState === xhr.DONE) {
+        // Если запрос завершился ошибкой 400+
+        if(xhr.status >= 400) {
+            setTimeout(() => {
+                return alert('Ошибка загрузки данных о вопросе');
+            }, 1000)
+        }
+        // Если запрос завершился успешно
+        if(xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            const poolTitleText = response.data.title;
+            const poolAnswersText = response.data.answers;
 
-	setPollElement(value) {
-		if (value) {
-			this._pollElement = value;
-		} else {
-			this._pollElement = document.createElement("div");
-			this._pollElement.classList.add("poll");
-		}
-		this.setTitleElement(this._pollElement.querySelector("#poll__title"));
-		this.setAnswersElement(this._pollElement.querySelector("#poll__answers"));
-		return this._pollElement;
-	}
+            const poolTitle = document.getElementById('poll__title');
+            poolTitle.textContent = poolTitleText;
 
-	setTitleElement(value) {
-		if (value) {
-			this._titleElement = value;
-		} else {
-			this._titleElement = document.createElement("div");
-			this._titleElement.classList.add("poll__title");
-			this._titleElement["id"] = "poll__title";
-		}
-		this.data.title = this._titleElement.textContent;
-		return this._titleElement;
-	}
+            poolAnswersText.forEach(answer => {
+                createHTML(answer);
+            });
 
-	setAnswersElement(value) {
-		this.data.answers.length = 0;
-		if (value) {
-			this._answersElement = value;
-			Array.from(value.children).forEach(child => {
-				this.answers.push(child.textContent);
-			});
-		} else {
-			this._answersElement = document.createElement("div");
-			this._answersElement.classList.add("poll__answers poll__answers_active");
-			this._answersElement["id"] = "poll__answers";
-		}
-		return this._answersElement;
-	}
+            const btnAnswers = document.querySelectorAll('.poll__answer');
+            btnAnswers.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    alert('Спасибо, Ваш голос засчитан!');
+                    
+                })
+            })
+        }
+    }
+})
+xhr.send();
 
-	render() {
-		this._titleElement.textContent = this.data.title;
-		this._answersElement.innerHTML = "";
-		for (let i = 0; i < this.data.answers.length; i++) {
-			let button = document.createElement("button");
-			button.classList.add("poll__answer");
-			button["answerid"] = i;
-			button.textContent = this.data.answers[i];
-			this._answersElement.append(button);
-		}
-		Array.from(this._answersElement.children).forEach(child => {
-			child.addEventListener("click", e => {
-				this._pollElement.dispatchEvent(
-					new CustomEvent("answer-click", {
-						detail: {
-							answerID: child["answerid"]
-						},
-						bubbles: true,
-						cancelable: true
-					})
-				);
-			});
-		});
-	}
-}
+// Функция создания кнопки
+function createHTML(answer) { 
+    const btnAnswer = document.createElement('button');
+    btnAnswer.classList.add('poll__answer');
+    btnAnswer.textContent = answer;
+    poolAnswers.appendChild(btnAnswer);
+    return btnAnswer;
+} 
+		 
+		  
