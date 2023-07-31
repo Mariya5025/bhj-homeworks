@@ -31,7 +31,7 @@ function signOUT(e) {
 	showWelcome();
 };
 
-div class="signin"  {
+  function showWelcome() {
 	let userID = localStorage.getItem("user_id");
 	let welcomeWindow = document.getElementById("welcome");
 	if (userID) {
