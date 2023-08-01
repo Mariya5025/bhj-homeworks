@@ -1,6 +1,6 @@
 'use strict';
 
-const textEditor = document.getElementById('editor')
+const textEditor = document.localStorage.getItem ('editor')
 
  
 document.getElementById('editor').oninput = function (event) {
