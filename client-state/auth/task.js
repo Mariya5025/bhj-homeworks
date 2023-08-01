@@ -1,62 +1,56 @@
-let signin = document.getElementById("signin");
-signin.classList.add("signin_active");
+ 'use strict';
 
-let signinForm = signin.querySelector("#signin__form");
+const formHTML = document.getElementById('signin');
+formHTML.classList.add('signin_active');
+let loginValue = document.getElementsByName('login')[0];
+let passwordValue = document.getElementsByName('password')[0];
 
-function clearForm() {
-	signinForm.querySelector(`[name="login"]`).value = "";
-	signinForm.querySelector(`[name="password"]`).value = "";
-}
-
-function signIN(e) {
-	e.preventDefault();
-	let xhr = new XMLHttpRequest();
-	xhr.addEventListener("loadend", function () {
-		let response = this.response;
-		if (response.success) {
-			localStorage.setItem("user_id", response.user_id);
-		} else {
-			alert("Неверный логин/пароль");
-		}
-		showWelcome();
-	});
-	xhr.responseType = "json";
-	xhr.open("POST", this.closest("form").action);
-	xhr.send(new FormData(this.closest("form")));
+function clearFormData() {
+    loginValue.value = '';
+    passwordValue.value = '';
 };
 
-function signOUT(e) {
-	e.preventDefault();
-	localStorage.removeItem("user_id");
-	showWelcome();
+function formsChangeAuth(userID) {
+    formHTML.classList.toggle('signin_active');
+    document.getElementById('user_id').innerText = userID;
+    document.getElementById('welcome').classList.toggle('welcome_active');
 };
 
-  function showWelcome() {
-	let userID = localStorage.getItem("user_id");
-	let welcomeWindow = document.getElementById("welcome");
-	if (userID) {
-		welcomeWindow.querySelector("#user_id").textContent = userID;
-		welcomeWindow.classList.add("welcome_active");
-		signinForm.querySelector(`[name="login"]`).style.display = "none";
-		signinForm.querySelector(`[name="password"]`).style.display = "none";
-		signinForm.querySelector("#signin__btn").style.display = "none";
-		signinForm.querySelector("#signout__btn").style.display = "block";
-	} else {
-		signinForm.querySelector(`[name="login"]`).style.display = "block";
-		signinForm.querySelector(`[name="password"]`).style.display = "block";
-		signinForm.querySelector("#signout__btn").style.display = "none";
-		signinForm.querySelector("#signin__btn").style.display = "block";
-		welcomeWindow.querySelector("#user_id").textContent = "";
-		welcomeWindow.classList.remove("welcome_active");
-	}
-	clearForm();
+document.getElementById('signin__btn').onclick = function(event) {
+    if (loginValue.value && passwordValue.value) {
+        let formData = new FormData(document.getElementById('signin__form'));
+        const postRequest = new XMLHttpRequest();
+        postRequest.open("POST", 'https://netology-slow-rest.herokuapp.com/auth.php', true);
+        postRequest.onreadystatechange = function() {
+            if (postRequest.status == 200 && postRequest.readyState == 4) {
+                let response = JSON.parse(postRequest.response);
+                if (response['success'] == false) {
+                    alert('Неверный логин или пароль!');
+                } else {
+                    formsChangeAuth(response['user_id']);
+                    localStorage.setItem('authString', JSON.stringify(response));
+                };
+            };
+        };
+        postRequest.send(formData);
+        clearFormData();
+    } else {
+        alert('Введите имя и пароль пожалуйста!');
+        clearFormData();
+    };
+    return false;
 };
 
-signinForm
-	.querySelector("#signin__btn")
-	.addEventListener("click", signIN, false);
-signinForm
-	.querySelector("#signout__btn")
-	.addEventListener("click", signOUT, false);
+document.getElementById('unsignin__btn').onclick = function (event) {
+    formsChangeAuth('');
+    localStorage.removeItem('authString');
+};
 
-showWelcome();
+function renderPage() {
+    if (localStorage['authString']) {
+        formsChangeAuth(JSON.parse(localStorage['authString'])['user_id']);
+        clearFormData();
+    };
+};
+
+renderPage();
