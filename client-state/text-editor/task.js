@@ -1,7 +1,4 @@
 'use strict';
-
-const textEditor = document.localStorage.getItem ('editor')
-
  
 document.getElementById('editor').oninput = function (event) {
     localStorage.textEditor ? localStorage.textEditor = JSON.stringify(event.target.value) : localStorage.setItem('textEditor', JSON.stringify(event.target.value));
