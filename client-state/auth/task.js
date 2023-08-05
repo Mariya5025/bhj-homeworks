@@ -1,56 +1,59 @@
- 'use strict';
+let welcome = document.querySelector('#welcome');
+window.onload = function() {
+    if(localStorage.getItem('user_id')) {
+        let id = document.querySelector('#user_id');
+        id.textContent = localStorage.getItem('user_id');       
+        welcome.classList.add('welcome_active');
+        signin.classList.remove('signin_active');
+        welcome.insertAdjacentHTML('afterend', '<button class="btn" id="signout__btn">Выйти</button>');
+        let signoutButton = document.querySelector('#signout__btn');
+        signoutButton.addEventListener('click', e => {
+            e.preventDefault();
+            localStorage.clear();
+            location.reload();     
+        })
+}}
 
-const formHTML = document.getElementById('signin');
-formHTML.classList.add('signin_active');
-let loginValue = document.getElementsByName('login')[0];
-let passwordValue = document.getElementsByName('password')[0];
+let signin = document.querySelector('#signin');
+signin.classList.add('signin_active');
 
-function clearFormData() {
-    loginValue.value = '';
-    passwordValue.value = '';
-};
+let login = Array.from(document.getElementsByName('login'))[0];
+let password = Array.from(document.getElementsByName('password'))[0];
+let button = document.querySelector('#signin__btn');
 
-function formsChangeAuth(userID) {
-    formHTML.classList.toggle('signin_active');
-    document.getElementById('user_id').innerText = userID;
-    document.getElementById('welcome').classList.toggle('welcome_active');
-};
 
-document.getElementById('signin__btn').onclick = function(event) {
-    if (loginValue.value && passwordValue.value) {
-        let formData = new FormData(document.getElementById('signin__form'));
-        const postRequest = new XMLHttpRequest();
-        postRequest.open("POST", 'https://netology-slow-rest.herokuapp.com/auth.php', true);
-        postRequest.onreadystatechange = function() {
-            if (postRequest.status == 200 && postRequest.readyState == 4) {
-                let response = JSON.parse(postRequest.response);
-                if (response['success'] == false) {
-                    alert('Неверный логин или пароль!');
-                } else {
-                    formsChangeAuth(response['user_id']);
-                    localStorage.setItem('authString', JSON.stringify(response));
-                };
-            };
+button.addEventListener('click', e => {    
+    e.preventDefault();
+    let form = document.querySelector('#signin__form');
+    let formData = new FormData(form);    
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://netology-slow-rest.herokuapp.com/auth.php');
+    xhr.send(formData);
+    xhr.onreadystatechange = function () {
+        if(xhr.readyState === 4) {
+            if(JSON.parse(xhr.responseText).success === false) {
+                alert('Неверный логин/пароль');
+                login.value = '';
+                password.value = '';
+                return false;
+            } else {           
+                localStorage.setItem('user_id', `${JSON.parse(xhr.responseText).user_id}`);  
+                welcome.textContent = `Добро пожаловать, пользователь ${login.value} #${JSON.parse(xhr.responseText).user_id}`;                
+                welcome.classList.add('welcome_active');
+                button.remove();
+                let buttonField = Array.from(document.querySelectorAll('.row'))[2];
+                buttonField.insertAdjacentHTML('beforeend', '<button class="btn" id="signout__btn">Выйти</button>');
+                let signoutButton = document.querySelector('#signout__btn');
+                signoutButton.addEventListener('click', e => {
+                    e.preventDefault();
+                    localStorage.clear();
+                    location.reload();                
+                   
+                })              
+
+            }
+        
         };
-        postRequest.send(formData);
-        clearFormData();
-    } else {
-        alert('Введите имя и пароль пожалуйста!');
-        clearFormData();
-    };
-    return false;
-};
+        };
 
-document.getElementById('unsignin__btn').onclick = function (event) {
-    formsChangeAuth('');
-    localStorage.removeItem('authString');
-};
-
-function renderPage() {
-    if (localStorage['authString']) {
-        formsChangeAuth(JSON.parse(localStorage['authString'])['user_id']);
-        clearFormData();
-    };
-};
-
-renderPage();
+})
